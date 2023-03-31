@@ -311,7 +311,13 @@ class ModelHandler(object):
 
         # Prepare init node embedding, init adj
         raw_context_vec, context_vec, context_mask, init_adj = network.prepare_init_graph(context, context_lens)
-
+        '''
+        network.prepare_init_graph 是一个函数，用于准备初始的图。它的输入参数为 context 和 context_lens，表示待处理的上下文和上下文长度。它的返回值包括四个部分：
+        raw_context_vec: 上下文中所有节点的原始特征向量，形状为 (num_nodes, feature_dim)。
+        context_vec: 上下文中所有节点的经过处理后的特征向量，形状为 (num_nodes, feature_dim)。
+        context_mask: 一个二元组，表示上下文中存在的节点和不存在的节点的掩码，分别表示为 True 和 False。形状为 (num_nodes,)。
+        init_adj: 上下文的邻接矩阵，形状为 (num_nodes, num_nodes)。
+        '''
 
         # Init
         raw_node_vec = raw_context_vec # word embedding

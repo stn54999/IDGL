@@ -16,7 +16,7 @@ from .network_data import data_utils as network_data_utils
 from .uci_data import data_utils as uci_data_utils
 from .text_data import data_utils as text_data_utils
 from .timer import Timer
-from . import padding_utils
+from . import padding_utils, dgl_data
 from . import constants
 
 
@@ -64,7 +64,12 @@ def prepare_datasets(config):
                 'idx_train': idx_train.to(device) if device else idx_train,
                 'idx_val': idx_val.to(device) if device else idx_val,
                 'idx_test': idx_test.to(device) if device else idx_test}
-
+    if config['data_type'] == 'dgl':
+        train_set, dev_set, test_set = dgl_data.load_data(config)
+        print('# of training examples: {}'.format(len(train_set)))
+        print('# of dev examples: {}'.format(len(dev_set)))
+        print('# of testing examples: {}'.format(len(test_set)))
+        data = {'train': train_set, 'dev': dev_set, 'test': test_set}
     elif config['data_type'] == 'uci':
         data_conf = uci_data_utils.UCI(seed=config.get('data_seed', config['seed']), dataset_name=config['dataset_name'], n_train=config['n_train'], n_val=config['n_val'])
         adj, features, labels, idx_train, idx_val, idx_test = data_conf.load(data_dir=config.get('data_dir', None), knn_size=config['input_graph_knn_size'], epsilon=config.get('input_graph_epsilon', None), knn_metric=config.get('knn_metric', 'cosine'))

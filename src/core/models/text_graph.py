@@ -11,10 +11,13 @@ from ..utils.generic_utils import to_cuda, create_mask, batch_normalize_adj
 from ..utils.constants import VERY_SMALL_NUMBER
 
 
-
+'''
+这是一个名为TextGraphRegression的神经网络模型，继承自PyTorch中的nn.Module类。
+该模型用于执行文本分类或回归任务，它可以接受一个预训练的词嵌入模型和一个词汇表作为输入。'''
 class TextGraphRegression(nn.Module):
     def __init__(self, config, w_embedding, word_vocab):
         super(TextGraphRegression, self).__init__()
+        # 保存参数和名称
         self.config = config
         self.name = 'TextGraphRegression'
         self.device = config['device']

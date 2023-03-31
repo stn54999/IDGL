@@ -7,11 +7,50 @@ import networkx as nx
 import scipy.sparse as sp
 from sklearn.neighbors import kneighbors_graph
 import torch
-
+from dgl import load_graphs
 
 from ..generic_utils import *
 from ..constants import VERY_SMALL_NUMBER
+import dgl
+import torch
+import numpy as np
+from torch.utils.data import Dataset
 
+
+class CustomDGLDataset(Dataset):
+    def __init__(self, graphs, labels):
+        self.graphs = graphs
+        self.labels = labels
+        self.num_graphs = len(graphs)
+
+        # 按照8-1-1的比例划分数据集
+        train_size = int(0.8 * self.num_graphs)
+        val_size = int(0.1 * self.num_graphs)
+        test_size = self.num_graphs - train_size - val_size
+
+        # 创建索引并随机排列
+        indices = np.arange(self.num_graphs)
+        np.random.shuffle(indices)
+
+        # 根据索引分配数据集
+        self.train_idx = indices[:train_size]
+        self.val_idx = indices[train_size:train_size + val_size]
+        self.test_idx = indices[train_size + val_size:]
+
+    def __getitem__(self, idx):
+        return self.graphs[idx], self.labels[idx]
+
+    def __len__(self):
+        return self.num_graphs
+
+    def train_set(self):
+        return torch.utils.data.Subset(self, self.train_idx)
+
+    def val_set(self):
+        return torch.utils.data.Subset(self, self.val_idx)
+
+    def test_set(self):
+        return torch.utils.data.Subset(self, self.test_idx)
 
 def parse_index_file(filename):
     """Parse index file."""
@@ -66,7 +105,20 @@ def load_data(data_dir, dataset_str, knn_size=None, epsilon=None, knn_metric='co
     """
     assert (knn_size is None) or (epsilon is None)
 
-    if dataset_str.startswith('ogbn'): # Open Graph Benchmark datasets
+    if dataset_str.startswith('AllEnergyImg'):
+        datasets =load_dgl(data_dir,dataset_str)
+        graphs = [item[0] for item in datasets]
+        labels = [item[1] for item in datasets]
+        # 创建数据集
+        dataset = CustomDGLDataset(graphs, labels)
+        idx_train = dataset.train_idx
+        idx_val = dataset.val_idx
+        idx_test = dataset.test_idx
+        graph = dgl.batch()
+        features = graphs.ndata['node_feature']
+        edge_index = graphs.edge_index
+
+    elif dataset_str.startswith('ogbn'): # Open Graph Benchmark datasets
         from ogb.nodeproppred import NodePropPredDataset
 
         dataset = NodePropPredDataset(name=dataset_str)
